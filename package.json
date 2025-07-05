@@ -5,12 +5,19 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "start": "npm run build && node dist/index.js",
+    "start:dev": "npx ts-node src/index.ts",
+    "start:dry-run": "npx ts-node src/index.ts --dry-run",
+    "start:live": "npx ts-node src/index.ts --live",
+    "test": "npx ts-node src/index.ts --test",
+    "benchmark": "npx ts-node src/index.ts --benchmark",
+    "dry-run": "npx ts-node src/dry-run.ts",
+    "optimized-dry-run": "npx ts-node src/optimized-dry-run.ts",
+    "simple-test": "npx ts-node src/simple-test.ts",
+    "generate-wallet": "node scripts/generate-wallet.js",
+    "dev": "npx ts-node --watch src/index.ts --dry-run",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "clean": "rm -rf dist"
   },
   "keywords": [
     "solana",
