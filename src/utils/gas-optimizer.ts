@@ -125,7 +125,6 @@ export class GasOptimizer {
     try {
       // Simulate transaction to get accurate gas estimate
       const connection = this.connectionManager.getConnection();
-      
       const simulation = await connection.simulateTransaction(transaction, {
         commitment: 'confirmed',
         sigVerify: false,

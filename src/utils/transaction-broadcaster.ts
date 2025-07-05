@@ -151,7 +151,7 @@ export class TransactionBroadcaster {
       if (transaction instanceof VersionedTransaction) {
         signature = await connection.sendTransaction(transaction, options);
       } else {
-        signature = await connection.sendTransaction(transaction, options);
+        signature = await connection.sendTransaction(transaction, [], options);
       }
 
       logger.debug('Transaction sent', {
@@ -383,12 +383,12 @@ export class TransactionBroadcaster {
             
             let signature: string;
             if (transaction instanceof VersionedTransaction) {
-              signature = await fallbackConnection.sendTransaction(transaction, {
+              signature = await fallbackConnection.sendTransaction(transaction, [], {
                 skipPreflight: this.config.skipPreflight,
                 maxRetries: 1
               });
             } else {
-              signature = await fallbackConnection.sendTransaction(transaction, {
+              signature = await fallbackConnection.sendTransaction(transaction, [], {
                 skipPreflight: this.config.skipPreflight,
                 maxRetries: 1
               });

@@ -66,6 +66,15 @@ export class ConnectionManager {
     return this.connections[0];
   }
 
+  getCurrentEndpoint(): string {
+    return this.endpoints[this.currentIndex];
+  }
+
+  rotateConnection(): void {
+    this.currentIndex = (this.currentIndex + 1) % this.connections.length;
+    logger.info(`Rotated to connection: ${this.getCurrentEndpoint()}`);
+  }
+
   getHealthyConnections(): Connection[] {
     return this.connections.filter((_, index) => 
       this.healthChecks.get(this.endpoints[index]) !== false

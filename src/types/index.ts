@@ -19,6 +19,7 @@ export interface SwapTransaction {
   amountIn: Big;
   amountOut: Big;
   slippage: Big;
+  slippageTolerance?: Big;
   dex: DEXType;
   poolAddress: PublicKey;
   userAddress: PublicKey;
@@ -37,6 +38,7 @@ export interface SandwichOpportunity {
   maxSlippage: Big;
   gasEstimate: number;
   timestamp: number;
+  detectedAt: number;
   dex: DEXType;
   priority: 'very_high' | 'high' | 'medium' | 'low';
 }
@@ -73,6 +75,8 @@ export interface SigningResult {
 
 export interface ProfitCalculation {
   estimatedProfit: Big;
+  expectedProfit: Big;
+  netProfit: Big;
   confidence: number;
   riskScore: number;
   frontrunAmount: Big;
@@ -82,6 +86,12 @@ export interface ProfitCalculation {
   priceImpact: Big;
   liquidityDepth: Big;
   marketConditions: 'excellent' | 'good' | 'fair' | 'poor';
+}
+
+export interface RiskAssessment {
+  score: number;
+  factors: string[];
+  recommendation: 'execute' | 'caution' | 'skip';
 }
 
 export interface MarketData {
@@ -94,13 +104,22 @@ export interface MarketData {
 
 export interface BotConfig {
   rpcEndpoints: string[];
+  wsEndpoints?: string[];
   jitoEndpoints?: string[];
+  jitoEndpoint?: string;
   dryRun: boolean;
   minProfitThreshold: number;
   maxSlippageTolerance: number;
   maxGasPrice: number;
+  gasLimitMultiplier?: number;
   monitoringInterval: number;
   enabledDEXs: DEXType[];
+  monitoredDEXs: DEXType[];
+  privateKeyPath?: string;
+  retryAttempts?: number;
+  riskTolerance?: number;
+  maxPositionSize?: number;
+  flashloanProviders?: string[];
   riskManagement: {
     maxPositionSize: number;
     stopLossThreshold: number;
@@ -116,6 +135,29 @@ export interface BotConfig {
     enableFileLogging: boolean;
     logDirectory: string;
   };
+}
+
+export interface MonitorConfig {
+  dexes: DEXType[];
+  minSlippage: number;
+  maxSlippage: number;
+  minAmount: number;
+  maxAmount: number;
+}
+
+export interface BotMetrics {
+  totalOpportunities: number;
+  successfulExecutions: number;
+  totalProfit: Big;
+  averageLatency: number;
+  uptime: number;
+}
+
+export interface FlashloanProvider {
+  name: string;
+  endpoint: string;
+  maxAmount: Big;
+  fee: Big;
 }
 
 export interface LogEntry {
