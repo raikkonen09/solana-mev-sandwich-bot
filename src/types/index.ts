@@ -1,55 +1,44 @@
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Transaction, Keypair } from '@solana/web3.js';
 import Big from 'big.js';
 
+// Core Types
 export interface TokenInfo {
   mint: PublicKey;
   symbol: string;
   decimals: number;
-  name: string;
-}
-
-export interface TokenPair {
-  tokenA: TokenInfo;
-  tokenB: TokenInfo;
+  name?: string;
+  logoURI?: string;
 }
 
 export interface SwapTransaction {
   signature: string;
-  programId: PublicKey;
-  accounts: PublicKey[];
+  slot: number;
+  blockTime: number;
   tokenIn: TokenInfo;
   tokenOut: TokenInfo;
   amountIn: Big;
-  minimumAmountOut: Big;
-  slippageTolerance: number;
-  timestamp: number;
+  amountOut: Big;
+  slippage: Big;
   dex: DEXType;
   poolAddress: PublicKey;
-}
-
-export enum DEXType {
-  RAYDIUM = 'raydium',
-  ORCA = 'orca',
-  PHOENIX = 'phoenix'
+  userAddress: PublicKey;
+  instructions: any[];
+  logs: string[];
 }
 
 export interface SandwichOpportunity {
   id: string;
-  targetTransaction: SwapTransaction;
+  victimTransaction: SwapTransaction;
   estimatedProfit: Big;
+  confidence: number;
+  riskScore: number;
   frontrunAmount: Big;
   backrunAmount: Big;
-  gasEstimate: Big;
-  riskScore: number;
-  confidence: number;
-  detectedAt: number;
-}
-
-export interface BundleTransaction {
-  transaction: Transaction;
-  type: 'frontrun' | 'victim' | 'backrun';
-  expectedGas: number;
-  priority: number;
+  maxSlippage: Big;
+  gasEstimate: number;
+  timestamp: number;
+  dex: DEXType;
+  priority: 'very_high' | 'high' | 'medium' | 'low';
 }
 
 export interface ExecutionResult {
@@ -61,87 +50,133 @@ export interface ExecutionResult {
   executionTime: number;
 }
 
-export interface MonitorConfig {
-  rpcEndpoints: string[];
-  wsEndpoints: string[];
-  monitoredDEXs: DEXType[];
-  minSlippageThreshold: number;
-  minAmountThreshold: Big;
-  maxLatency: number;
+export interface BundleTransaction {
+  transaction: Transaction;
+  type: 'frontrun' | 'victim' | 'backrun';
+  expectedGas: number;
+}
+
+export interface JitoBundleStatus {
+  processed: boolean;
+  confirmed: boolean;
+  error?: string;
+  transactions: any;
+  totalGasUsed: number;
+}
+
+export interface SigningResult {
+  success: boolean;
+  signedTransaction?: Transaction;
+  signature?: string;
+  error?: string;
 }
 
 export interface ProfitCalculation {
-  expectedProfit: Big;
-  gasCosts: Big;
-  slippageImpact: Big;
-  marketImpact: Big;
-  netProfit: Big;
-  profitMargin: number;
-  riskAdjustedReturn: Big;
-}
-
-export interface RiskAssessment {
-  executionRisk: number;
-  marketRisk: number;
-  liquidityRisk: number;
-  competitionRisk: number;
-  overallRisk: number;
-}
-
-export interface BotMetrics {
-  opportunitiesDetected: number;
-  bundlesSubmitted: number;
-  successfulSandwiches: number;
-  totalProfit: Big;
-  averageLatency: number;
-  errorRate: number;
-  uptime: number;
-}
-
-export interface LogEntry {
-  timestamp: number;
-  level: 'info' | 'warn' | 'error' | 'debug';
-  message: string;
-  data?: any;
-}
-
-export interface PoolInfo {
-  address: PublicKey;
-  tokenA: TokenInfo;
-  tokenB: TokenInfo;
-  liquidity: Big;
-  fee: number;
-  dex: DEXType;
+  estimatedProfit: Big;
+  confidence: number;
+  riskScore: number;
+  frontrunAmount: Big;
+  backrunAmount: Big;
+  maxSlippage: Big;
+  gasEstimate: number;
+  priceImpact: Big;
+  liquidityDepth: Big;
+  marketConditions: 'excellent' | 'good' | 'fair' | 'poor';
 }
 
 export interface MarketData {
   price: Big;
-  volume24h: Big;
   liquidity: Big;
-  priceChange24h: number;
+  volume24h: Big;
+  priceChange24h: Big;
   lastUpdated: number;
-}
-
-export interface FlashloanProvider {
-  name: string;
-  programId: PublicKey;
-  fee: number;
-  maxAmount: Big;
-  supportedTokens: PublicKey[];
 }
 
 export interface BotConfig {
   rpcEndpoints: string[];
-  wsEndpoints: string[];
-  jitoEndpoint: string;
-  privateKeyPath: string;
-  minProfitThreshold: Big;
+  jitoEndpoints?: string[];
+  dryRun: boolean;
+  minProfitThreshold: number;
   maxSlippageTolerance: number;
-  gasLimitMultiplier: number;
-  retryAttempts: number;
-  monitoredDEXs: DEXType[];
-  flashloanProviders: FlashloanProvider[];
-  riskTolerance: number;
-  maxPositionSize: Big;
+  maxGasPrice: number;
+  monitoringInterval: number;
+  enabledDEXs: DEXType[];
+  riskManagement: {
+    maxPositionSize: number;
+    stopLossThreshold: number;
+    maxDailyLoss: number;
+  };
+  flashloan: {
+    enabled: boolean;
+    providers: string[];
+    maxAmount: number;
+  };
+  logging: {
+    level: string;
+    enableFileLogging: boolean;
+    logDirectory: string;
+  };
 }
+
+export interface LogEntry {
+  timestamp: number;
+  level: 'error' | 'warn' | 'info' | 'debug';
+  message: string;
+  data?: any;
+  component?: string;
+}
+
+export enum DEXType {
+  RAYDIUM = 'raydium',
+  ORCA = 'orca',
+  PHOENIX = 'phoenix',
+  JUPITER = 'jupiter',
+  SERUM = 'serum'
+}
+
+export enum ErrorType {
+  NETWORK_ERROR = 'network_error',
+  TRANSACTION_ERROR = 'transaction_error',
+  SIMULATION_ERROR = 'simulation_error',
+  BUNDLE_ERROR = 'bundle_error',
+  WALLET_ERROR = 'wallet_error',
+  CONFIGURATION_ERROR = 'configuration_error',
+  UNKNOWN_ERROR = 'unknown_error'
+}
+
+// Event Types
+export interface OpportunityDetectedEvent {
+  opportunity: SandwichOpportunity;
+  timestamp: number;
+}
+
+export interface ExecutionCompletedEvent {
+  result: ExecutionResult;
+  opportunity: SandwichOpportunity;
+  timestamp: number;
+}
+
+export interface ErrorEvent {
+  error: Error;
+  type: ErrorType;
+  context?: any;
+  timestamp: number;
+}
+
+// Utility Types
+export type ConnectionConfig = {
+  commitment: 'processed' | 'confirmed' | 'finalized';
+  confirmTransactionInitialTimeout: number;
+  wsEndpoint?: string;
+};
+
+export type SendOptions = {
+  skipPreflight?: boolean;
+  preflightCommitment?: 'processed' | 'confirmed' | 'finalized';
+  maxRetries?: number;
+};
+
+// Re-export commonly used types
+export { PublicKey, Transaction, Keypair } from '@solana/web3.js';
+export { default as Big } from 'big.js';
 
